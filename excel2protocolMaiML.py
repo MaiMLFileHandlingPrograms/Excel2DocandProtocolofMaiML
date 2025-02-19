@@ -238,25 +238,26 @@ def process_protocol(sheet_name):
             pnml.remove(arc)
             pnml.append(arc)
 
-    programs = protocol.findall(".//program")
-    for program in programs:
-        program_id = program.get("id")
-        if f"@{program_id}" not in xls.sheet_names:
+    ## program/method/protocol要素にテンプレートを追加
+    elements = protocol.findall(".//program") + protocol.findall(".//method") + [protocol]
+
+    for element in elements:
+        element_id = element.get("id")
+        if f"@{element_id}" not in xls.sheet_names:
             continue
-        df_program = xls.parse(f"@{program_id}")
-        df_program = df_program.map(clean_numeric)
+        df_element = xls.parse(f"@{element_id}")
+        df_element = df_element.map(clean_numeric)
         
-        for num_PROGRAM, row_PROGRAM in df_program.iterrows():
-            if row_PROGRAM["TYPE"] == "MATERIALTEMPLATE":
-                materialtemplate = gen_element.add_element(program, "materialtemplate", row_PROGRAM)
-                create_template_ref(materialtemplate, row_PROGRAM, df_program, num_PROGRAM)
-            elif row_PROGRAM["TYPE"] == "CONDITIONTEMPLATE":
-                conditiontemplate = gen_element.add_element(program, "conditiontemplate", row_PROGRAM)
-                create_template_ref(conditiontemplate, row_PROGRAM, df_program, num_PROGRAM)
-            elif row_PROGRAM["TYPE"] == "RESULTTEMPLATE":
-                resulttemplate = gen_element.add_element(program, "resulttemplate", row_PROGRAM)
-                create_template_ref(resulttemplate, row_PROGRAM, df_program, num_PROGRAM)
-    
+        for num_element, row_element in df_element.iterrows():
+            if row_element["TYPE"] == "MATERIALTEMPLATE":
+                materialtemplate = gen_element.add_element(element, "materialtemplate", row_element)
+                create_template_ref(materialtemplate, row_element, df_element, num_element)
+            elif row_element["TYPE"] == "CONDITIONTEMPLATE":
+                conditiontemplate = gen_element.add_element(element, "conditiontemplate", row_element)
+                create_template_ref(conditiontemplate, row_element, df_element, num_element)
+            elif row_element["TYPE"] == "RESULTTEMPLATE":
+                resulttemplate = gen_element.add_element(element, "resulttemplate", row_element)
+                create_template_ref(resulttemplate, row_element, df_element, num_element)  
     
     # TEMPLATEシートの処理
     df_template = xls.parse("TEMPLATE")
