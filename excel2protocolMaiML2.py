@@ -1,20 +1,11 @@
+import os, sys
+from pathlib import Path
 import pandas as pd
 import xml.etree.ElementTree as ET
 import uuid
 from datetime import datetime
 from USERS.usersettings import defaultNS, filePath
 
-
-# Excelファイルの読み込み
-xls = ''
-try:
-    xls = pd.ExcelFile(filePath().INPUT_FILE_PATH)
-    print("エクセルファイルを読み込みました: "+ filePath().INPUT_FILE_PATH)
-except Exception as e:
-    print("入力ファイル読み込み中にエラーが発生しました: "+ filePath().INPUT_FILE_PATH)
-    #print(e)
-    exit(1)
-    
 
 ## エクセルの文字列をフォーマット
 def clean_numeric(value):
@@ -147,13 +138,13 @@ def create_arc(arc, row, df, rownum):
 def create_template_ref(template, row, df, rownum):
     for col in df.columns:
         if "PLACEREF" in col and pd.notna(row[col]):
-            place_ref = ET.SubElement(template, "placeRef", id=f"def{col}{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
+            place_ref = ET.SubElement(template, "placeRef", id=f"defPLACEREF{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
         if "TEMPLATEREF" in col and pd.notna(row[col]):
-            template_ref = ET.SubElement(template, "templateRef", id=f"def{col}{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
+            template_ref = ET.SubElement(template, "templateRef", id=f"defTEMPLATEREF{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
 
 
 ## DOCUMENTシートを処理
-def process_document(sheet_name):
+def process_document(xls, sheet_name):
     df = xls.parse(sheet_name)
     #df = df.map(clean_string)
     df = df.map(clean_numeric)
@@ -183,7 +174,7 @@ def process_document(sheet_name):
 
 
 ## PROTOCOLシートを処理
-def process_protocol(sheet_name):
+def process_protocol(xls, sheet_name):
     df = xls.parse(sheet_name)
     df = df.map(clean_numeric)
 
@@ -353,26 +344,63 @@ def process_protocol(sheet_name):
     return protocol
 
 
+def main(exfilepath, maimlpath):
+    # Excelファイルの読み込み
+    xls = ''
+    try:
+        xls = pd.ExcelFile(exfilepath)
+        print("エクセルファイルを読み込みました: "+ exfilepath)
+    except Exception as e:
+        print("入力ファイル読み込み中にエラーが発生しました: "+ exfilepath)
+        #print(e)
+        exit(1)
+        
+    # DOCUMENTシートを処理
+    document_xml = process_document(xls, "DOCUMENT")
+
+    # PROTOCOLシートを処理
+    protocol_xml = process_protocol(xls, "PROTOCOL")
+
+    # MAIML XMLを生成
+    maiml_xml = ET.Element("maiml")
+    maiml_attrs = defaultNS().MAIML_ATTR
+    for maiml_attr in maiml_attrs:
+        maiml_xml.set(maiml_attr.split("=")[0], maiml_attr.split("=")[1].replace('"', ""))
+    maiml_xml.append(document_xml)
+    maiml_xml.append(protocol_xml)
+
+    # XMLを文字列に変換しファイル保存
+    try:
+        tree = ET.ElementTree(maiml_xml)
+        ET.indent(tree, space="    ", level=0)
+        tree.write(maimlpath, encoding="utf-8", xml_declaration=True)
+    except Exception as e:
+        print('Error while writing to the file.',e) 
 
 
-# DOCUMENTシートを処理
-document_xml = process_document("DOCUMENT")
-
-# PROTOCOLシートを処理
-protocol_xml = process_protocol("PROTOCOL")
-
-# MAIML XMLを生成
-maiml_xml = ET.Element("maiml")
-maiml_attrs = defaultNS().MAIML_ATTR
-for maiml_attr in maiml_attrs:
-    maiml_xml.set(maiml_attr.split("=")[0], maiml_attr.split("=")[1].replace('"', ""))
-maiml_xml.append(document_xml)
-maiml_xml.append(protocol_xml)
-
-# XMLを文字列に変換
-#tree = ET.ElementTree(protocol_xml)
-tree = ET.ElementTree(maiml_xml)
-ET.indent(tree, space="    ", level=0)
-tree.write(filePath().OUTPUT_FILE_PATH, encoding="utf-8", xml_declaration=True)
-
-print("MaiMLファイルが生成されました: "+ filePath().OUTPUT_FILE_PATH)
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        # 引数で指定したディレクトリ内のエクセルファイルを取得
+        rootdir = Path( filePath().INPUT_DIR + sys.argv[1])
+        if rootdir.exists() and rootdir.is_dir():
+            for file in rootdir.rglob('*'):  # rglob('*') で再帰的にすべてのファイルを取得
+                if file.is_file():  # ファイルかどうかを確認
+                    # ファイル名と拡張子を分けて取得
+                    file_extension = file.suffix  # 拡張子を取得
+                    if file_extension == '.xlsx':
+                        exfilename = file
+                        inputExfilepath = rootdir / exfilename
+                        outputMaimlpath = rootdir / f"{os.path.splitext(os.path.basename(exfilename))[0]}.maiml"
+                        try:
+                            main(str(inputExfilepath), str(outputMaimlpath))
+                            print("Successfully created the MaiML data file. ", outputMaimlpath)
+                        except Exception as e:
+                            print('Error : ',e)
+    else:
+        inputExfilepath = filePath().INPUT_FILE_PATH
+        outputMaimlpath = filePath().OUTPUT_FILE_PATH
+        try:
+            main(inputExfilepath, outputMaimlpath)
+            print("Successfully created the MaiML data file. "+ outputMaimlpath)
+        except Exception as e:
+            print('Error : ',e)
