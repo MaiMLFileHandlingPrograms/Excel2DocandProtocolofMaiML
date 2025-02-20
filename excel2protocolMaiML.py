@@ -61,9 +61,9 @@ def get_current_datetime():
     return datetime.now().astimezone().isoformat()
 
 ## ID属性の値がnanの場合、デフォルト値を設定
-def setID(value, prefix=""):
+def setID(value, tag, prefix=""):
     if pd.isna(value):
-        return f"def{prefix}ID"
+        return f"def{tag}{prefix}ID"
     return str(value)
 
 class BaseElement:
@@ -72,7 +72,7 @@ class BaseElement:
             if tag == "root":
                 element = parent
             else:
-                element = ET.SubElement(parent, tag, id=setID(row["#ID"], tag))
+                element = ET.SubElement(parent, tag, id=setID(row["#ID"], tag, prefix))
             # 共通部分
             #self.add_common_subelements(element, row)
         except KeyError:
@@ -113,28 +113,43 @@ class GlobalElement(BaseElement):
     
 ## 汎用データコンテナ
 class GenElement(BaseElement):
-    def add_common_subelements(self, element, row):
+    def add_common_subelements(self, element, row, df):
         super().add_common_subelements(element, row)
-        value = nan_to_empty_string(row["VALUE"])
-        if not pd.isna(row["#FORMATSTRING"]):
-            value = formatter_num(row["#FORMATSTRING"], value)
-        ET.SubElement(element, "value").text = value
+        flag = 0
+        for col in df.columns:
+            if "VALUE" in col:
+                if pd.isna(row[col]) and (row["#XSI:TYPE"] == "propertyListType" or flag >= 1):
+                    pass
+                else:
+                    value = nan_to_empty_string(row["VALUE"])
+                    if pd.notna(row["#FORMATSTRING"]):
+                        value = formatter_num(row["#FORMATSTRING"], value)
+                    ET.SubElement(element, "value").text = value
+                    flag += 1
         return element
 
 ## creator要素のvendorRef/instrumentRef要素
 def create_vendor_ref(creator, row, df, rownum):
     for col in df.columns:
-        if "VENDORREF" in col and pd.notna(row[col]):
-            vendor_ref = ET.SubElement(creator, "vendorRef", id=f"def{col}{rownum}", ref=nan_to_empty_string(row[col]))
+        if "VENDORREF" in col:
+            if pd.notna(row[col]):
+                vendor_ref = ET.SubElement(creator, "vendorRef", id=f"def{col}{rownum}", ref=nan_to_empty_string(row[col]))
+            else:
+                print("CREATOR行にVENDORREF列の記載がありません。")
+                exit(1)
         if "INSTRUMENTREF" in col and pd.notna(row[col]):
             vendor_ref = ET.SubElement(creator, "instrumentRef", id=f"def{col}{rownum}", ref=nan_to_empty_string(row[col]))
 
 ## instruction要素のtransitionRef要素
 def create_transition_ref(instruction, row, df, rownum):
     for col in df.columns:
-        if "TRANSITIONREF" in col and pd.notna(row[col]):
-            transition_ref = ET.SubElement(instruction, "transitionRef", id=f"def{col}{rownum}", ref=nan_to_empty_string(row[col]))
-
+        if "TRANSITIONREF" in col:
+            if pd.notna(row[col]):
+                transition_ref = ET.SubElement(instruction, "transitionRef", id=f"def{col}{rownum}", ref=nan_to_empty_string(row[col]))
+            else:
+                print("INSTRUCTION行にTRANSITIONREF列の記載がありません。")
+                exit(1)
+            
 ## arc要素のsource/target属性
 def create_arc(arc, row, df, rownum):
     for col in df.columns:
@@ -147,9 +162,23 @@ def create_arc(arc, row, df, rownum):
 def create_template_ref(template, row, df, rownum):
     for col in df.columns:
         if "PLACEREF" in col and pd.notna(row[col]):
-            place_ref = ET.SubElement(template, "placeRef", id=f"def{col}{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
+            place_ref = ET.SubElement(template, "placeRef", id=f"defPLACEREF{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
         if "TEMPLATEREF" in col and pd.notna(row[col]):
-            template_ref = ET.SubElement(template, "templateRef", id=f"def{col}{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
+            template_ref = ET.SubElement(template, "templateRef", id=f"defTEMPLATEREF{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
+
+## materialtemplate/conditiontemplate/resulttemplate要素を順番に並べる
+def sort_templates(parent):
+    template_types = ["materialtemplate", "conditiontemplate", "resulttemplate"]
+    
+    elements = []
+    for t_type in template_types:
+        elements.extend(parent.findall(t_type))
+
+    for element in elements:
+        parent.remove(element)  # 一旦削除
+    
+    for element in elements:
+        parent.append(element)  # 順番通りに追加
 
 
 ## DOCUMENTシートを処理
@@ -164,19 +193,19 @@ def process_document(sheet_name):
     for num, row in df.iterrows():
         if row["TAG"] == "DOCUMENT":
             document.set("id", setID(row["#ID"],"document"))
-            gen_element.add_element(document, "root", row)
+            gen_element.add_element(document, "root", row, num)
         elif row["TAG"] == "CREATOR":
-            creator = gen_element.add_element(document, "creator", row)
+            creator = gen_element.add_element(document, "creator", row, num)
             create_vendor_ref(creator, row, df, num)
         elif row["TAG"] == "VENDOR":
-            gen_element.add_element(document, "vendor", row)
+            gen_element.add_element(document, "vendor", row, num)
         elif row["TAG"] == "OWNER":
-            gen_element.add_element(document, "owner", row)
+            gen_element.add_element(document, "owner", row, num)
         elif row["TAG"] == "INSTRUMENT":
             if pd.isna(row["#ID"]):
                 pass
             else:
-                gen_element.add_element(document, "instrument", row)
+                gen_element.add_element(document, "instrument", row, num)
     # DATE
     ET.SubElement(document, "date").text = get_current_datetime()
     return document
@@ -193,16 +222,19 @@ def process_protocol(sheet_name):
     for num, row in df.iterrows():
         if row["TAG"] == "PROTOCOL":
             protocol.set("id", setID(row["#ID"],"protocol"))
-            gen_element.add_element(protocol, "root", row)
+            gen_element.add_element(protocol, "root", row, num)
         elif row["TAG"] == "METHOD":
-            method = gen_element.add_element(protocol, "method", row)
+            method = gen_element.add_element(protocol, "method", row, num)
         elif row["TAG"] == "PNML":
-            gen_element.add_element(method, "pnml", row)
+            gen_element.add_element(method, "pnml", row, num)
         elif row["TAG"] == "PROGRAM":
-            gen_element.add_element(method, "program", row)
+            gen_element.add_element(method, "program", row, num)
         elif row["TAG"] == "INSTRUCTION":
+            if pd.isna(row['PROGRAMID']):
+                print("INSTRUCTION行にPROGRAMID列の記載がありません。")
+                exit(1)
             program = protocol.find(f".//program[@id='{row['PROGRAMID']}']")
-            instruction = gen_element.add_element(program, "instruction", row)
+            instruction = gen_element.add_element(program, "instruction", row, num)
             create_transition_ref(instruction, row, df, num)
             
     pnmls = protocol.findall(".//pnml")
@@ -215,11 +247,11 @@ def process_protocol(sheet_name):
         
         for num_PNML, row_PNML in df_pnml.iterrows():
             if row_PNML["TYPE"] == "PLACE":
-                place = sim_element.add_element(pnml, "place", row_PNML)
+                place = sim_element.add_element(pnml, "place", row_PNML, num_PNML)
             elif row_PNML["TYPE"] == "TRANSITION":
-                transition = sim_element.add_element(pnml, "transition", row_PNML)
+                transition = sim_element.add_element(pnml, "transition", row_PNML, num_PNML)
             elif row_PNML["TYPE"] == "ARC":
-                arc = sim_element.add_element(pnml, "arc", row_PNML)
+                arc = sim_element.add_element(pnml, "arc", row_PNML, num_PNML)
                 create_arc(arc, row_PNML, df_pnml, num_PNML)
         
         ## pnmlのコンテンツを要素順に並べる
@@ -250,13 +282,13 @@ def process_protocol(sheet_name):
         
         for num_element, row_element in df_element.iterrows():
             if row_element["TYPE"] == "MATERIALTEMPLATE":
-                materialtemplate = gen_element.add_element(element, "materialtemplate", row_element)
+                materialtemplate = gen_element.add_element(element, "materialtemplate", row_element, num_element)
                 create_template_ref(materialtemplate, row_element, df_element, num_element)
             elif row_element["TYPE"] == "CONDITIONTEMPLATE":
-                conditiontemplate = gen_element.add_element(element, "conditiontemplate", row_element)
+                conditiontemplate = gen_element.add_element(element, "conditiontemplate", row_element, num_element)
                 create_template_ref(conditiontemplate, row_element, df_element, num_element)
             elif row_element["TYPE"] == "RESULTTEMPLATE":
-                resulttemplate = gen_element.add_element(element, "resulttemplate", row_element)
+                resulttemplate = gen_element.add_element(element, "resulttemplate", row_element, num_element)
                 create_template_ref(resulttemplate, row_element, df_element, num_element)  
     
     # TEMPLATEシートの処理
@@ -268,13 +300,19 @@ def process_protocol(sheet_name):
     gen_element = GenElement()
     
     for num_TEMPLATE, row_TEMPLATE in df_template.iterrows():
-        template_id = str(row_TEMPLATE["TEMPLATEID"])  # IDを文字列に変換
-        
-        ## 汎用データコンテナを作成
-        general = ET.Element(str(row_TEMPLATE["TYPE"]))
-        # 必須属性
-        general.set("key", str(row_TEMPLATE["#KEY"]))
-        general.set("xsi:type", str(row_TEMPLATE["#XSI:TYPE"]))
+        template_id = ''
+        general = ''
+        try:
+            template_id = str(row_TEMPLATE["TEMPLATEID"])  # IDを文字列に変換
+            ## 汎用データコンテナを作成
+            general = ET.Element(str(row_TEMPLATE["TYPE"]))
+            # 必須属性
+            general.set("key", str(row_TEMPLATE["#KEY"]))
+            general.set("xsi:type", str(row_TEMPLATE["#XSI:TYPE"]))
+        except KeyError as e:
+            print("TEMPLATEシートに誤りがあります。", e)
+            exit(1)
+            
         # 必須でない属性
         attributes = {
             "units": "#UNITS",
@@ -283,13 +321,12 @@ def process_protocol(sheet_name):
             "axis": "#AXIS",
             "size": "#SIZE"
         }
-        
         for attr, col_name in attributes.items():
             if col_name in df_template.columns and not pd.isna(row_TEMPLATE[col_name]):
                 general.set(attr, str(row_TEMPLATE[col_name]))  ## 特殊文字を削除
                 
         # 子要素を追加
-        gen_element.add_common_subelements(general, row_TEMPLATE)
+        gen_element.add_common_subelements(general, row_TEMPLATE, df_template)
         
         ## 汎用データコンテナのネスト対応
         if pd.isna(row_TEMPLATE["PARENTKEY"]):    # 親要素の場合parentgenerallist に追加
@@ -325,7 +362,6 @@ def process_protocol(sheet_name):
         ## コンテンツを要素順に並べる
         placereflist = template.findall(".//placeRef")
         templatereflist = template.findall(".//templateRef")
-        
         # 要素を削除して追加
         for placeref in placereflist:
             template.remove(placeref)
@@ -334,23 +370,12 @@ def process_protocol(sheet_name):
             template.remove(templateref)
             template.append(templateref)
 
-    ## templateコンテンツを要素順に並べる
-    programs = protocol.findall(".//program")
-    for program in programs:
-        materialTemplatelist = program.findall(".//materialtemplate")
-        conditionTemplatelist = program.findall(".//conditiontemplate")
-        resultTemplatelist = program.findall(".//resulttemplate")
-        
-        # 要素を削除して追加
-        for materialtemplate in materialTemplatelist:
-            program.remove(materialtemplate)
-            program.append(materialtemplate)    
-        for conditiontemplate in conditionTemplatelist:
-            program.remove(conditiontemplate)
-            program.append(conditiontemplate)
-        for resulttemplate in resultTemplatelist:
-            program.remove(resulttemplate)
-            program.append(resulttemplate)
+    ## program,method,protocolのtemplateコンテンツを要素順に並べる
+    for program in protocol.findall(".//program"):
+        sort_templates(program)
+    for method in protocol.findall(".//method"):
+        sort_templates(method)
+    sort_templates(protocol)
     return protocol
 
 
