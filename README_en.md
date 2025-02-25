@@ -49,3 +49,22 @@ This program takes an Excel file containing planning information for measurement
 ## Required Python Packages
 - Listed in `requirements.txt`
 
+
+# D: Running the Sample File
+## ① Verify that the input file exists in the `/INPUT/test/` directory.
+- exampleX.xlsx
+
+## ② Check that the namespace definitions have been added to `/USERS/usersettings.py`.
+   ```sh
+      'xmlns:BBBB="http://BBBB.corp/index.jp"'
+      'xmlns:BBBBHPLC="http://BBBB.corp/ontology/hplc"'
+      'xmlns:CDF="http://BBBB.corp/ontology/cdf"'
+   ```
+
+## ③ Execute the command:
+   ```sh
+      python excel2protocolMaiML2.py test
+   ```
+
+## ④ Verify the generated MaiML file in the /INPUT/test/ directory.
+- exampleX.maiml
