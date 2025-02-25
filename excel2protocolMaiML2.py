@@ -204,6 +204,7 @@ def process_document(xls, sheet_name):
 
 ## PROTOCOLシートを処理
 def process_protocol(xls, sheet_name):
+    print("PROTOCOL")
     df = xls.parse(sheet_name)
     df = df.map(clean_numeric)
 
@@ -283,6 +284,7 @@ def process_protocol(xls, sheet_name):
                 create_template_ref(resulttemplate, row_element, df_element, num_element)  
     
     # TEMPLATEシートの処理
+    print("TEMPLATE")
     df_template = xls.parse("TEMPLATE")
     #df_template = df_template.map(clean_string)
     df_template = df_template.map(clean_numeric)
@@ -325,29 +327,33 @@ def process_protocol(xls, sheet_name):
         else:  # 子要素の場合childgenerallist に追加
             ET.SubElement(general, "parentkey").text = nan_to_empty_string(row_TEMPLATE["PARENTKEY"])
             childgenerallist.setdefault(template_id, []).append(general)
-        
+    
     # XMLツリーからidが一致するタグを検索
     for template in protocol.findall(".//materialtemplate") + protocol.findall(".//conditiontemplate") + protocol.findall(".//resulttemplate"):
         template_id = template.get("id")
         parentgeneral = parentgenerallist.get(template_id, [])
         childgeneral = childgenerallist.get(template_id, [])
+        
         for parent in parentgeneral:
             template.append(parent)
             parent_key = parent.get("key")
+            
             for child in list(childgeneral):
                 child_parent_key_element = child.find(".//parentkey")
                 if child_parent_key_element is not None and child_parent_key_element.text == parent_key:
                     childgeneral.remove(child)
                     child.remove(child_parent_key_element)
                     parent.append(child)
-            while childgeneral:
-                for child in list(childgeneral):  # ループ内でリストを変更するので `list()` を使う
-                    child_key = child.find(".//parentkey").text
+        # 子要素が存在する場合
+        while childgeneral:
+            for child in list(childgeneral):  # ループ内でリストを変更するので `list()` を使う
+                child_key_element = child.find(".//parentkey")
+                if child_key_element is not None:
+                    child_key = child_key_element.text
                     parent2 = parent.find(f".//*[@key='{child_key}']")
-                    
                     if parent2 is not None:
                         childgeneral.remove(child)  # リストから削除
-                        child.remove(child.find(".//parentkey"))  # <parentkey>タグを削除
+                        child.remove(child_key_element)  # <parentkey>タグを削除
                         parent2.append(child)  # 親要素に追加
     
         ## コンテンツを要素順に並べる
@@ -378,7 +384,7 @@ def main(exfilepath, maimlpath):
         print("エクセルファイルを読み込みました: "+ exfilepath)
     except Exception as e:
         print("入力ファイル読み込み中にエラーが発生しました: "+ exfilepath)
-        #print(e)
+        print(e)
         exit(1)
         
     # DOCUMENTシートを処理

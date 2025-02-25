@@ -340,23 +340,27 @@ def process_protocol(sheet_name):
         template_id = template.get("id")
         parentgeneral = parentgenerallist.get(template_id, [])
         childgeneral = childgenerallist.get(template_id, [])
+        
         for parent in parentgeneral:
             template.append(parent)
             parent_key = parent.get("key")
+            
             for child in list(childgeneral):
                 child_parent_key_element = child.find(".//parentkey")
                 if child_parent_key_element is not None and child_parent_key_element.text == parent_key:
                     childgeneral.remove(child)
                     child.remove(child_parent_key_element)
                     parent.append(child)
-            while childgeneral:
-                for child in list(childgeneral):  # ループ内でリストを変更するので `list()` を使う
-                    child_key = child.find(".//parentkey").text
+        # 子要素が存在する場合
+        while childgeneral:
+            for child in list(childgeneral):  # ループ内でリストを変更するので `list()` を使う
+                child_key_element = child.find(".//parentkey")
+                if child_key_element is not None:
+                    child_key = child_key_element.text
                     parent2 = parent.find(f".//*[@key='{child_key}']")
-                    
                     if parent2 is not None:
                         childgeneral.remove(child)  # リストから削除
-                        child.remove(child.find(".//parentkey"))  # <parentkey>タグを削除
+                        child.remove(child_key_element)  # <parentkey>タグを削除
                         parent2.append(child)  # 親要素に追加
     
         ## コンテンツを要素順に並べる
