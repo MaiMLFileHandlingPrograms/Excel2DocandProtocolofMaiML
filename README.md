@@ -50,3 +50,19 @@
 ## 実行に必要なPythonパッケージ
 - `requirements.txt` に記載
 
+
+# D: sampleファイルの実行
+## ①`/INPUT/test/`ディレクトリに入力ファイルが存在していることを確認
+- exampleX.xlsx
+## ②`/USERS/usersettings.py`に名前空間の定義が追加されていることを確認
+   ```sh
+      'xmlns:BBBB="http://BBBB.corp/index.jp"'
+      'xmlns:BBBBHPLC="http://BBBB.corp/ontology/hplc"'
+      'xmlns:CDF="http://BBBB.corp/ontology/cdf"'
+   ```
+## ③コマンド実行
+   ```sh
+   python excel2protocolMaiML2.py test
+   ```
+## ④`/INPUT/test`ディレクトリに出力されたMaiMLファイルを確認
+- exampleX.maiml
