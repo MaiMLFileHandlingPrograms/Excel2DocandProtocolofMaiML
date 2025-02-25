@@ -20,6 +20,9 @@ class defaultNS():
     	'xmlns:lifecycle="http://www.xes-standard.org/lifecycle.xesext#"',
     	'xmlns:xsd="http://www.w3.org/2001/XMLSchema"',
     	'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"', 
+    	'xmlns:BBBB="http://BBBB.corp/index.jp"', 
+    	'xmlns:BBBBHPLC="http://BBBB.corp/ontology/hplc"', 
+    	'xmlns:CDF="http://BBBB.corp/ontology/cdf"', 
         ##　ここまで編集可
     ]
 
@@ -40,7 +43,7 @@ class defaultNS():
 import os
 class filePath():
     ##　ここから編集可
-    _IN_EXCEL_FILENAME = "inprotocol.xlsx"
+    _IN_EXCEL_FILENAME = "example.xlsx"
     _MaiML_FILENAME = "output.maiml"
     ##　ここまで編集可
     
