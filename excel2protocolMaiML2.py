@@ -126,7 +126,7 @@ def create_vendor_ref(creator, row, df, rownum):
             if pd.notna(row[col]):
                 vendor_ref = ET.SubElement(creator, "vendorRef", id=f"def{col}{rownum}", ref=nan_to_empty_string(row[col]))
             else:
-                print("CREATOR行にVENDORREF列の記載がありません。")
+                print("The VENDORREF column is not listed in the CREATOR row.")
                 exit(1)
         if "INSTRUMENTREF" in col and pd.notna(row[col]):
             vendor_ref = ET.SubElement(creator, "instrumentRef", id=f"def{col}{rownum}", ref=nan_to_empty_string(row[col]))
@@ -138,7 +138,7 @@ def create_transition_ref(instruction, row, df, rownum):
             if pd.notna(row[col]):
                 transition_ref = ET.SubElement(instruction, "transitionRef", id=f"def{col}{rownum}", ref=nan_to_empty_string(row[col]))
             else:
-                print("INSTRUCTION行にTRANSITIONREF列の記載がありません。")
+                print("The TRANSITIONREF column is not listed in the INSTRUCTION line.")
                 exit(1)
             
 ## arc要素のsource/target属性
@@ -204,7 +204,7 @@ def process_document(xls, sheet_name):
 
 ## PROTOCOLシートを処理
 def process_protocol(xls, sheet_name):
-    print("PROTOCOL")
+    #print("PROTOCOL")
     df = xls.parse(sheet_name)
     df = df.map(clean_numeric)
 
@@ -223,7 +223,7 @@ def process_protocol(xls, sheet_name):
             gen_element.add_element(method, "program", row, num)
         elif row["TAG"] == "INSTRUCTION":
             if pd.isna(row['PROGRAMID']):
-                print("INSTRUCTION行にPROGRAMID列の記載がありません。")
+                print("The PROGRAMID column is not listed in the INSTRUCTION line.")
                 exit(1)
             program = protocol.find(f".//program[@id='{row['PROGRAMID']}']")
             instruction = gen_element.add_element(program, "instruction", row, num)
@@ -284,7 +284,7 @@ def process_protocol(xls, sheet_name):
                 create_template_ref(resulttemplate, row_element, df_element, num_element)  
     
     # TEMPLATEシートの処理
-    print("TEMPLATE")
+    #print("TEMPLATE")
     df_template = xls.parse("TEMPLATE")
     #df_template = df_template.map(clean_string)
     df_template = df_template.map(clean_numeric)
@@ -303,7 +303,7 @@ def process_protocol(xls, sheet_name):
             general.set("key", str(row_TEMPLATE["#KEY"]))
             general.set("xsi:type", str(row_TEMPLATE["#XSI:TYPE"]))
         except KeyError as e:
-            print("TEMPLATEシートに誤りがあります。", e)
+            print("There is an error on the TEMPLATE sheet.", e)
             exit(1)
             
         # 必須でない属性
@@ -325,7 +325,7 @@ def process_protocol(xls, sheet_name):
         if pd.isna(row_TEMPLATE["PARENTKEY"]):    # 親要素の場合parentgenerallist に追加
             parentgenerallist.setdefault(template_id, []).append(general)
         else:  # 子要素の場合childgenerallist に追加
-            ET.SubElement(general, "parentkey").text = nan_to_empty_string(row_TEMPLATE["PARENTKEY"])
+            ET.SubElement(general, "parentkey").text = nan_to_empty_string(row_TEMPLATE["PARENTKEY"])  ## 一時的に親要素のkeyをparentkey要素として格納
             childgenerallist.setdefault(template_id, []).append(general)
     
     # XMLツリーからidが一致するタグを検索
@@ -333,6 +333,24 @@ def process_protocol(xls, sheet_name):
         template_id = template.get("id")
         parentgeneral = parentgenerallist.get(template_id, [])
         childgeneral = childgenerallist.get(template_id, [])
+        
+        ## 以降の無限ループ回避のため、入力データに間違いがないかチェック
+        checkkeylist = []
+        for parent in parentgeneral:
+            parent_key = parent.get("key")
+            checkkeylist.append(parent_key)
+        checkchildkeylist = []
+        for child in list(childgeneral):
+            child_key = child.get("key")
+            checkkeylist.append(child_key)
+            child_parent_key_element = child.find(".//parentkey")
+            checkchildkeylist.append(child_parent_key_element.text)
+        ## checkchildkeylistのkeyがcheckkeylistに存在しない場合はエラー
+        checkkeyset = set(checkkeylist)  # リストをセットに変換して検索を高速化
+        missing_keys = [key for key in checkchildkeylist if key not in checkkeyset]
+        if missing_keys:
+            print("The PARENTKEY column on the TEMPLATE sheet is incorrect. ", missing_keys)
+            exit(1)
         
         for parent in parentgeneral:
             template.append(parent)
@@ -381,9 +399,9 @@ def main(exfilepath, maimlpath):
     xls = ''
     try:
         xls = pd.ExcelFile(exfilepath)
-        print("エクセルファイルを読み込みました: "+ exfilepath)
+        print("Excel file is loaded.: "+ exfilepath)
     except Exception as e:
-        print("入力ファイル読み込み中にエラーが発生しました: "+ exfilepath)
+        print("An error occurred while reading the input file.: "+ exfilepath)
         print(e)
         exit(1)
         

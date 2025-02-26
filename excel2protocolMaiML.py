@@ -340,7 +340,24 @@ def process_protocol(sheet_name):
         template_id = template.get("id")
         parentgeneral = parentgenerallist.get(template_id, [])
         childgeneral = childgenerallist.get(template_id, [])
-        
+        ## 以降の無限ループ回避のため、入力データに間違いがないかチェック
+        checkkeylist = []
+        for parent in parentgeneral:
+            parent_key = parent.get("key")
+            checkkeylist.append(parent_key)
+        checkchildkeylist = []
+        for child in list(childgeneral):
+            child_key = child.get("key")
+            checkkeylist.append(child_key)
+            child_parent_key_element = child.find(".//parentkey")
+            checkchildkeylist.append(child_parent_key_element.text)
+        ## checkchildkeylistのkeyがcheckkeylistに存在しない場合はエラー
+        checkkeyset = set(checkkeylist)  # リストをセットに変換して検索を高速化
+        missing_keys = [key for key in checkchildkeylist if key not in checkkeyset]
+        if missing_keys:
+            print("The PARENTKEY column on the TEMPLATE sheet is incorrect. ", missing_keys)
+            exit(1)
+            
         for parent in parentgeneral:
             template.append(parent)
             parent_key = parent.get("key")
