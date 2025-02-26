@@ -362,7 +362,7 @@ def process_protocol(xls, sheet_name):
                     childgeneral.remove(child)
                     child.remove(child_parent_key_element)
                     parent.append(child)
-        # 子要素が存在する場合
+        # 子要素がネストで存在する場合
         while childgeneral:
             for child in list(childgeneral):  # ループ内でリストを変更するので `list()` を使う
                 child_key_element = child.find(".//parentkey")
