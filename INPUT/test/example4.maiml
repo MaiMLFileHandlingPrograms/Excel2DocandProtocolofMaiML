@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <maiml version="1.0" features="nested-attributes" xsi:type="protocolFileRootType" xmlns="http://www.maiml.org/schemas" xmlns:maiml="http://www.maiml.org/schemas" xmlns:time="http://www.xes-standard.org/time.xesext#" xmlns:concept="http://www.xes-standard.org/concept.xesext#" xmlns:lifecycle="http://www.xes-standard.org/lifecycle.xesext#" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:BBBB="http://BBBB.corp/index.jp" xmlns:BBBBHPLC="http://BBBB.corp/ontology/hplc" xmlns:CDF="http://BBBB.corp/ontology/cdf">
     <document id="documentID001">
-        <uuid>f3fe60ff-0b8a-414c-bde4-5a0396cd287a</uuid>
+        <uuid>947c8640-4094-4d82-a4df-b9e7495d32a2</uuid>
         <name />
         <description />
         <annotation />
@@ -31,20 +31,20 @@
             <description />
             <annotation />
         </instrument>
-        <date>2025-02-26T10:40:33.495025+09:00</date>
+        <date>2025-02-26T15:01:51.402855+09:00</date>
     </document>
     <protocol id="HPLCprotocolID001">
-        <uuid>cce6a116-860c-425e-abbf-be54f18857df</uuid>
+        <uuid>9a7dfaae-2a6e-4c12-9153-381c79831710</uuid>
         <name />
         <description />
         <annotation />
         <method id="HPLCmethodID001">
-            <uuid>8d67cb02-2afa-4fda-b710-5a1f14906a2d</uuid>
+            <uuid>87276038-469f-4feb-b433-44120a5f2158</uuid>
             <name />
             <description />
             <annotation />
             <pnml id="HPLCpnmlID001">
-                <uuid>a47b587c-8e2a-4e61-9e4f-d63059357aee</uuid>
+                <uuid>10276b13-44ec-4c8e-abe4-f103bddd8907</uuid>
                 <name />
                 <description />
                 <annotation />
@@ -57,19 +57,19 @@
                 <arc id="HPLCarc003" source="HPLCtransition001" target="HPLCM_P002" />
             </pnml>
             <program id="HPLCprogramID001">
-                <uuid>76b862ef-779d-466c-a5ef-69ee4cab3228</uuid>
+                <uuid>0c4722d5-76c0-4601-978f-307d5bf671bb</uuid>
                 <name />
                 <description />
                 <annotation />
                 <instruction id="HPLCinstructionID001">
-                    <uuid>07d71d3c-aad9-43de-ac8e-003ad34a3855</uuid>
-                    <name />
+                    <uuid>b12fbb2a-634c-49d9-902c-dd33bbd25f39</uuid>
+                    <name>HPLC_Sample_Preparation</name>
                     <description />
                     <annotation />
                     <transitionRef id="defTRANSITIONREF7" ref="HPLCtransition001" />
                 </instruction>
                 <materialtemplate id="HPLCmaterialTemplateID001">
-                    <uuid>2887e3ca-82f3-4c6e-8f4f-ab566fa1621a</uuid>
+                    <uuid>da1e69f9-11f8-44f2-9eb7-567747a74e18</uuid>
                     <name />
                     <description />
                     <annotation>対象試料</annotation>
@@ -90,36 +90,64 @@
                     <placeRef id="defPLACEREFHPLCmaterialTemplateID0011" ref="HPLCM_P001" />
                 </materialtemplate>
                 <conditiontemplate id="HPLCconditionTemplateID001">
-                    <uuid>c54e7254-1f58-4b9e-8276-f1a4bdbb5bc2</uuid>
+                    <uuid>9534951f-32b0-4b5b-b909-ccdda372c3ea</uuid>
                     <name />
                     <description />
                     <annotation>前処理条件</annotation>
-                    <nan key="nan" xsi:type="nan">
+                    <property key="BBBBHPLC:samplePreparation" xsi:type="propertyListType">
                         <name />
-                        <description />
-                        <value />
-                    </nan>
-                    <nan key="nan" xsi:type="nan">
-                        <name />
-                        <description />
-                        <value />
-                    </nan>
-                    <nan key="nan" xsi:type="nan">
-                        <name />
-                        <description />
-                        <value />
-                    </nan>
+                        <description>前処理の条件</description>
+                        <property key="BBBBHPLC:carbonicAcidRemovedFlag" xsi:type="booleanType">
+                            <name />
+                            <description>炭酸除去</description>
+                            <value>1</value>
+                            <property key="BBBBHPLC:carbonicAcidRemovedSpecifications" xsi:type="stringType">
+                                <name />
+                                <description>炭酸除去方法</description>
+                                <value />
+                            </property>
+                        </property>
+                        <property key="BBBBHPLC:dilutionFlag" xsi:type="booleanType">
+                            <name />
+                            <description>希釈</description>
+                            <value>1</value>
+                            <property key="BBBBHPLC:dilutionSpecifications" xsi:type="stringType">
+                                <name />
+                                <description>希釈方法</description>
+                                <value />
+                            </property>
+                        </property>
+                        <property key="BBBBHPLC:filtration" xsi:type="propertyListType">
+                            <name />
+                            <description>濾過</description>
+                            <property key="BBBBHPLC:filtrationSpecifications" xsi:type="stringType">
+                                <name />
+                                <description>濾過方法</description>
+                                <value>PTFEフィルターを使用</value>
+                            </property>
+                        </property>
+                        <property key="BBBBHPLC:SPEFlag" xsi:type="booleanType">
+                            <name />
+                            <description>SPE</description>
+                            <value>1</value>
+                            <property key="BBBBHPLC:SPESpecifications" xsi:type="stringType">
+                                <name />
+                                <description>SPE方法</description>
+                                <value>C18 cartridgeを使用し疎水性の不純物を除去</value>
+                            </property>
+                        </property>
+                    </property>
                     <placeRef id="defPLACEREFHPLCconditionTemplateID0010" ref="HPLCC_P001" />
                 </conditiontemplate>
             </program>
         </method>
         <method id="HPLCmethodID002">
-            <uuid>6925e828-26b4-421b-90aa-16891ced91fa</uuid>
+            <uuid>1ae22846-ee2d-4c43-ba05-d5a1ac4b4184</uuid>
             <name />
             <description />
             <annotation />
             <pnml id="HPLCpnmlID002">
-                <uuid>ca891afa-0146-4aa6-bdbd-6719b2b25043</uuid>
+                <uuid>d2446488-4c77-426a-ba24-337f19b214f6</uuid>
                 <name />
                 <description />
                 <annotation />
@@ -132,105 +160,82 @@
                 <arc id="HPLCarc006" source="HPLCtransition002" target="HPLCR_P001" />
             </pnml>
             <program id="HPLCprogramID002">
-                <uuid>24a31c6c-d2b0-44ae-b06f-166199362777</uuid>
+                <uuid>9bccafde-f54e-4c55-9b88-a8e204d6d302</uuid>
                 <name />
                 <description />
                 <annotation />
                 <instruction id="HPLCinstructionID002">
-                    <uuid>49f35c6f-ba5c-444d-aa9a-453f5eb38ae6</uuid>
-                    <name />
+                    <uuid>c66d6c80-beb5-4084-89b4-4ca921a1a0d1</uuid>
+                    <name>HPLC</name>
                     <description />
                     <annotation />
                     <transitionRef id="defTRANSITIONREF8" ref="HPLCtransition002" />
                 </instruction>
                 <conditiontemplate id="HPLCconditionTemplateID002">
-                    <uuid>ab4a311d-ff69-4318-b8fd-7495f73cd19d</uuid>
+                    <uuid>472686c6-8f2d-4fd9-b2d7-93c37fcb4646</uuid>
                     <name />
                     <description />
                     <annotation>HPLC実行時の入力条件</annotation>
                     <property key="BBBBHPLC:column" xsi:type="propertyListType">
                         <name />
-                        <description />
+                        <description>カラム</description>
                         <property key="BBBBHPLC:specifications" xsi:type="stringType">
                             <name />
                             <description />
                             <value />
                         </property>
                     </property>
-                    <property key="BBBBHPLC:solvent" xsi:type="propertyListType">
+                    <property key="BBBBHPLC:mobilePhase" xsi:type="propertyListType">
                         <name />
-                        <description />
+                        <description>移動相</description>
                         <property key="BBBBHPLC:composition" xsi:type="stringType">
                             <name />
-                            <description />
-                            <value />
-                        </property>
-                        <property key="BBBBHPLC:ph" xsi:type="floatType">
-                            <name />
-                            <description />
-                            <value />
-                        </property>
-                        <property key="BBBBHPLC:flowRate" xsi:type="floatType" units="mL/min">
-                            <name />
-                            <description />
+                            <description>移動相の構成</description>
                             <value />
                         </property>
                     </property>
                     <property key="BBBBHPLC:detector" xsi:type="propertyListType">
                         <name />
-                        <description />
+                        <description>検出器</description>
                         <property key="BBBBHPLC:detectorTypes" xsi:type="stringType">
                             <name />
                             <description />
-                            <value />
+                            <value>UV Detector-aaaaaa</value>
                         </property>
                     </property>
-                    <property key="BBBBHPLC:samplePreparation" xsi:type="propertyListType">
+                    <property key="BBBBHPLC:operationgConditions" xsi:type="propertyListType">
                         <name />
                         <description />
-                        <property key="BBBBHPLC:sampleSolvent" xsi:type="stringType">
+                        <property key="BBBBHPLC:flowRate" xsi:type="floatType" units="mL/min">
                             <name />
                             <description />
                             <value />
                         </property>
-                        <property key="BBBBHPLC:column" xsi:type="floatType" units="mg/mL">
+                        <property key="BBBBHPLC:injectionVolume" xsi:type="floatType" units="uL">
                             <name />
                             <description />
                             <value />
                         </property>
-                    </property>
-                    <property key="BBBBHPLC:temperature" xsi:type="propertyListType">
-                        <name />
-                        <description />
                         <property key="BBBBHPLC:columnTemperature" xsi:type="floatType" units="°C">
                             <name />
                             <description />
                             <value />
                         </property>
-                        <property key="BBBBHPLC:sampleTemperature" xsi:type="floatType" units="°C">
+                        <property key="BBBBHPLC:uvDetection" xsi:type="floatType" units="nm">
                             <name />
                             <description />
-                            <value />
+                            <value>272</value>
                         </property>
-                    </property>
-                    <property key="BBBBHPLC:pressure" xsi:type="propertyListType">
-                        <name />
-                        <description />
-                        <property key="BBBBHPLC:systemPressure" xsi:type="intType" units="bar">
+                        <property key="BBBBHPLC:runTime" xsi:type="floatType" units="sec">
                             <name />
                             <description />
-                            <value />
+                            <value>600</value>
                         </property>
-                    </property>
-                    <property key="BBBBHPLC:separationMode" xsi:type="stringType">
-                        <name />
-                        <description />
-                        <value />
                     </property>
                     <placeRef id="defPLACEREFHPLCconditionTemplateID0020" ref="HPLCC_P002" />
                 </conditiontemplate>
                 <resulttemplate id="HPLCresultTemplateID001">
-                    <uuid>e9bb0e5c-6229-4386-bbb4-16049578118d</uuid>
+                    <uuid>a4fa02f3-9971-4544-8426-760efbc29b6c</uuid>
                     <name />
                     <description />
                     <annotation>HPLC出力結果</annotation>
@@ -313,19 +318,19 @@
             </program>
         </method>
         <materialtemplate id="HPLCmaterialTemplateID002">
-            <uuid>0769b8c4-de8e-4661-a1fb-de4499866d15</uuid>
+            <uuid>a76d547a-48df-4c7c-a706-84f7eb839c4e</uuid>
             <name />
             <description />
             <annotation>HPLC対象試料</annotation>
             <property key="BBBBHPLC:materialinfo" xsi:type="propertyListType">
                 <name />
                 <description />
-                <property key="BBBBHPLC:samplename" xsi:type="qualifiedNameType">
+                <property key="BBBBHPLC:samplenameBeforeProcessing" xsi:type="qualifiedNameType">
                     <name />
                     <description />
                     <value>sample_name</value>
                 </property>
-                <property key="BBBBHPLC:sampleID" xsi:type="uuidType">
+                <property key="BBBBHPLC:sampleIDBeforeProcessing" xsi:type="uuidType">
                     <name />
                     <description />
                     <value>3dc882f8-b1b1-421d-8fb7-b4dce87cb298</value>
