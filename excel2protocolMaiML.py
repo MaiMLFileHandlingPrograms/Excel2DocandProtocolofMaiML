@@ -226,14 +226,22 @@ def process_protocol(sheet_name):
         elif row["TAG"] == "METHOD":
             method = gen_element.add_element(protocol, "method", row, num)
         elif row["TAG"] == "PNML":
-            gen_element.add_element(method, "pnml", row, num)
-        elif row["TAG"] == "PROGRAM":
-            gen_element.add_element(method, "program", row, num)
-        elif row["TAG"] == "INSTRUCTION":
-            if pd.isna(row['PROGRAMID']):
-                print("INSTRUCTION行にPROGRAMID列の記載がありません。")
+            if pd.isna(row['PARENTID']):
+                print("The PARENTID column is not listed in the PNML line.")
                 exit(1)
-            program = protocol.find(f".//program[@id='{row['PROGRAMID']}']")
+            method4pnml = protocol.find(f".//method[@id='{row['PARENTID']}']")
+            gen_element.add_element(method4pnml, "pnml", row, num)
+        elif row["TAG"] == "PROGRAM":
+            if pd.isna(row['PARENTID']):
+                print("The PARENTID column is not listed in the PROGRAM line.")
+                exit(1)
+            method4program = protocol.find(f".//method[@id='{row['PARENTID']}']")
+            gen_element.add_element(method4program, "program", row, num)
+        elif row["TAG"] == "INSTRUCTION":
+            if pd.isna(row['PARENTID']):
+                print("The PARENTID column is not listed in the INSTRUCTION line.")
+                exit(1)
+            program = protocol.find(f".//program[@id='{row['PARENTID']}']")
             instruction = gen_element.add_element(program, "instruction", row, num)
             create_transition_ref(instruction, row, df, num)
             

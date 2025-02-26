@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <maiml version="1.0" features="nested-attributes" xsi:type="protocolFileRootType" xmlns="http://www.maiml.org/schemas" xmlns:maiml="http://www.maiml.org/schemas" xmlns:time="http://www.xes-standard.org/time.xesext#" xmlns:concept="http://www.xes-standard.org/concept.xesext#" xmlns:lifecycle="http://www.xes-standard.org/lifecycle.xesext#" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:BBBB="http://BBBB.corp/index.jp" xmlns:BBBBHPLC="http://BBBB.corp/ontology/hplc" xmlns:CDF="http://BBBB.corp/ontology/cdf">
     <document id="documentID001">
-        <uuid>76c2699a-34da-41e7-88f9-3aed901caa34</uuid>
+        <uuid>157c25f8-d0b4-473f-8171-10b0bb4e26c3</uuid>
         <name />
         <description />
         <annotation />
@@ -31,20 +31,20 @@
             <description />
             <annotation />
         </instrument>
-        <date>2025-02-25T15:33:26.162697+09:00</date>
+        <date>2025-02-26T10:40:33.512710+09:00</date>
     </document>
     <protocol id="HPLCprotocolID001">
-        <uuid>e4badfc2-ef88-474a-a906-53bf0a37f80b</uuid>
+        <uuid>05c9357b-b3d4-4907-9337-b209cc88e3a2</uuid>
         <name />
         <description />
         <annotation />
         <method id="HPLCmethodID001">
-            <uuid>100a8b29-4e0d-4af8-98a6-b7713ec77872</uuid>
+            <uuid>2b3ac467-ab78-434c-9eb1-4224c7e52c48</uuid>
             <name />
             <description />
             <annotation />
             <pnml id="HPLCpnmlID001">
-                <uuid>ee370114-28c2-4db2-8ee5-f2a235d28de7</uuid>
+                <uuid>8c0e84ad-5ae9-42f7-ae92-f8d13ed40389</uuid>
                 <name />
                 <description />
                 <annotation />
@@ -57,19 +57,19 @@
                 <arc id="HPLCarc003" source="HPLCtransition001" target="HPLCR_P001" />
             </pnml>
             <program id="HPLCprogramID001">
-                <uuid>64243858-63a4-4c95-aa3d-68ce40f2fb3f</uuid>
+                <uuid>261b57c9-7ec4-4c3e-a290-1e6dafcc5d33</uuid>
                 <name />
                 <description />
                 <annotation />
                 <instruction id="HPLCinstructionID001">
-                    <uuid>8eb5e9f7-c2f7-4c58-b833-7730f485a8d1</uuid>
+                    <uuid>ea895018-4a4b-4313-8da8-9803df0196e7</uuid>
                     <name />
                     <description />
                     <annotation />
                     <transitionRef id="defTRANSITIONREF4" ref="HPLCtransition001" />
                 </instruction>
                 <materialtemplate id="HPLCmaterialTemplateID001">
-                    <uuid>3d73a2dd-3fd3-4f07-a114-ba66b4206371</uuid>
+                    <uuid>d763ae31-74ce-47f8-a5c0-902f1e592661</uuid>
                     <name />
                     <description />
                     <annotation>HPLC対象試料</annotation>
@@ -90,7 +90,7 @@
                     <placeRef id="defPLACEREFHPLCmaterialTemplateID0010" ref="HPLCM_P001" />
                 </materialtemplate>
                 <conditiontemplate id="HPLCconditionTemplateID001">
-                    <uuid>037f173e-0371-4a7d-b6a4-e8bdf8d3c79c</uuid>
+                    <uuid>01796b42-7ed9-4d5c-9abb-83dcf2b81252</uuid>
                     <name />
                     <description />
                     <annotation>HPLC実行時の入力条件</annotation>
@@ -176,7 +176,7 @@
                     <placeRef id="defPLACEREFHPLCconditionTemplateID0011" ref="HPLCC_P001" />
                 </conditiontemplate>
                 <resulttemplate id="HPLCresultTemplateID001">
-                    <uuid>727260d5-0c64-4624-883c-8e2993470e0a</uuid>
+                    <uuid>30fc29c6-2ce1-450e-a501-e62b3120419a</uuid>
                     <name />
                     <description />
                     <annotation>HPLC出力結果</annotation>

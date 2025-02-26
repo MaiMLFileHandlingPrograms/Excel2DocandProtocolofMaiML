@@ -218,14 +218,22 @@ def process_protocol(xls, sheet_name):
         elif row["TAG"] == "METHOD":
             method = gen_element.add_element(protocol, "method", row, num)
         elif row["TAG"] == "PNML":
-            gen_element.add_element(method, "pnml", row, num)
-        elif row["TAG"] == "PROGRAM":
-            gen_element.add_element(method, "program", row, num)
-        elif row["TAG"] == "INSTRUCTION":
-            if pd.isna(row['PROGRAMID']):
-                print("The PROGRAMID column is not listed in the INSTRUCTION line.")
+            if pd.isna(row['PARENTID']):
+                print("The PARENTID column is not listed in the PNML line.")
                 exit(1)
-            program = protocol.find(f".//program[@id='{row['PROGRAMID']}']")
+            method4pnml = protocol.find(f".//method[@id='{row['PARENTID']}']")
+            gen_element.add_element(method4pnml, "pnml", row, num)
+        elif row["TAG"] == "PROGRAM":
+            if pd.isna(row['PARENTID']):
+                print("The PARENTID column is not listed in the PROGRAM line.")
+                exit(1)
+            method4program = protocol.find(f".//method[@id='{row['PARENTID']}']")
+            gen_element.add_element(method4program, "program", row, num)
+        elif row["TAG"] == "INSTRUCTION":
+            if pd.isna(row['PARENTID']):
+                print("The PARENTID column is not listed in the INSTRUCTION line.")
+                exit(1)
+            program = protocol.find(f".//program[@id='{row['PARENTID']}']")
             instruction = gen_element.add_element(program, "instruction", row, num)
             create_transition_ref(instruction, row, df, num)
             
@@ -346,7 +354,7 @@ def process_protocol(xls, sheet_name):
             child_parent_key_element = child.find(".//parentkey")
             checkchildkeylist.append(child_parent_key_element.text)
         ## checkchildkeylistのkeyがcheckkeylistに存在しない場合はエラー
-        checkkeyset = set(checkkeylist)  # リストをセットに変換して検索を高速化
+        checkkeyset = set(checkkeylist)
         missing_keys = [key for key in checkchildkeylist if key not in checkkeyset]
         if missing_keys:
             print("The PARENTKEY column on the TEMPLATE sheet is incorrect. ", missing_keys)
@@ -364,13 +372,13 @@ def process_protocol(xls, sheet_name):
                     parent.append(child)
         # 子要素がネストで存在する場合
         while childgeneral:
-            for child in list(childgeneral):  # ループ内でリストを変更するので `list()` を使う
+            for child in list(childgeneral):
                 child_key_element = child.find(".//parentkey")
                 if child_key_element is not None:
                     child_key = child_key_element.text
                     parent2 = parent.find(f".//*[@key='{child_key}']")
                     if parent2 is not None:
-                        childgeneral.remove(child)  # リストから削除
+                        childgeneral.remove(child)
                         child.remove(child_key_element)  # <parentkey>タグを削除
                         parent2.append(child)  # 親要素に追加
     
