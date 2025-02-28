@@ -66,7 +66,7 @@ class filePath():
 
     @property
     def INPUT_FILE_PATH(self):
-        if not os.path.isfile:
+        if not os.path.isfile(self._IN_EXCEL_FILEPATH):
             print("入力ファイルが存在しません。 ", self._IN_EXCEL_FILEPATH)
             exit(1)
         return self._IN_EXCEL_FILEPATH
