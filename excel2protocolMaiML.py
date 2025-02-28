@@ -158,7 +158,7 @@ def create_arc(arc, row, df, rownum):
         if "TARGET" in col and pd.notna(row[col]):
             arc.set("target", nan_to_empty_string(row[col]))
 
-## materialtemplate/conditiontemplate/resulttemplate要素のplaceRef/templateRef要素
+## materialTemplate/conditionTemplate/resultTemplate要素のplaceRef/templateRef要素
 def create_template_ref(template, row, df, rownum):
     for col in df.columns:
         if "PLACEREF" in col and pd.notna(row[col]):
@@ -166,9 +166,9 @@ def create_template_ref(template, row, df, rownum):
         if "TEMPLATEREF" in col and pd.notna(row[col]):
             template_ref = ET.SubElement(template, "templateRef", id=f"defTEMPLATEREF{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
 
-## materialtemplate/conditiontemplate/resulttemplate要素を順番に並べる
+## materialTemplate/conditionTemplate/resultTemplate要素を順番に並べる
 def sort_templates(parent):
-    template_types = ["materialtemplate", "conditiontemplate", "resulttemplate"]
+    template_types = ["materialTemplate", "conditionTemplate", "resultTemplate"]
     
     elements = []
     for t_type in template_types:
@@ -290,14 +290,14 @@ def process_protocol(sheet_name):
         
         for num_element, row_element in df_element.iterrows():
             if row_element["TYPE"] == "MATERIALTEMPLATE":
-                materialtemplate = gen_element.add_element(element, "materialtemplate", row_element, num_element)
-                create_template_ref(materialtemplate, row_element, df_element, num_element)
+                materialTemplate = gen_element.add_element(element, "materialTemplate", row_element, num_element)
+                create_template_ref(materialTemplate, row_element, df_element, num_element)
             elif row_element["TYPE"] == "CONDITIONTEMPLATE":
-                conditiontemplate = gen_element.add_element(element, "conditiontemplate", row_element, num_element)
-                create_template_ref(conditiontemplate, row_element, df_element, num_element)
+                conditionTemplate = gen_element.add_element(element, "conditionTemplate", row_element, num_element)
+                create_template_ref(conditionTemplate, row_element, df_element, num_element)
             elif row_element["TYPE"] == "RESULTTEMPLATE":
-                resulttemplate = gen_element.add_element(element, "resulttemplate", row_element, num_element)
-                create_template_ref(resulttemplate, row_element, df_element, num_element)  
+                resultTemplate = gen_element.add_element(element, "resultTemplate", row_element, num_element)
+                create_template_ref(resultTemplate, row_element, df_element, num_element)  
     
     # TEMPLATEシートの処理
     df_template = xls.parse("TEMPLATE")
@@ -344,7 +344,7 @@ def process_protocol(sheet_name):
             childgenerallist.setdefault(template_id, []).append(general)
         
     # XMLツリーからidが一致するタグを検索
-    for template in protocol.findall(".//materialtemplate") + protocol.findall(".//conditiontemplate") + protocol.findall(".//resulttemplate"):
+    for template in protocol.findall(".//materialTemplate") + protocol.findall(".//conditionTemplate") + protocol.findall(".//resultTemplate"):
         template_id = template.get("id")
         parentgeneral = parentgenerallist.get(template_id, [])
         childgeneral = childgenerallist.get(template_id, [])
