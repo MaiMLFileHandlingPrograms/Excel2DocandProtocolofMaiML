@@ -58,7 +58,11 @@ def create_uuid():
 
 ## document要素のdate要素
 def get_current_datetime():
-    return datetime.now().astimezone().isoformat()
+    # 現在のローカル時刻を取得
+    local_time = datetime.now().astimezone()
+    # xs:dateTime形式にフォーマット
+    formatted_time = local_time.strftime('%Y-%m-%dT%H:%M:%S') + f"{local_time.strftime('%z')[:3]}:{local_time.strftime('%z')[3:]}" 
+    return formatted_time
 
 ## ID属性の値がnanの場合、デフォルト値を設定
 def setID(value, tag, prefix=""):
