@@ -1,4 +1,18 @@
 # Excel2DocandProtocolofMaiML
+<br/>
+
+# 2025/3/25 下記へ移行しました
+## https://github.com/tacyas/MaiML/tree/main/Excel2MaiMLProtocol
+
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
 
 # A: 概要
 計測分析の手順や条件等の計画情報を記載したエクセルファイルを入力ファイルとし、
