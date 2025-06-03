@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <maiml version="1.0" features="nested-attributes" xsi:type="protocolFileRootType" xmlns="http://www.maiml.org/schemas" xmlns:maiml="http://www.maiml.org/schemas" xmlns:time="http://www.xes-standard.org/time.xesext#" xmlns:concept="http://www.xes-standard.org/concept.xesext#" xmlns:lifecycle="http://www.xes-standard.org/lifecycle.xesext#" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:BBBB="http://BBBB.corp/index.jp" xmlns:BBBBHPLC="http://BBBB.corp/ontology/hplc" xmlns:CDF="http://BBBB.corp/ontology/cdf" xmlns:AAAA="http://AAAA.corp/">
     <document id="documentID001">
-        <uuid>550331d0-9008-4ce2-95b1-f2bea63380fd</uuid>
+        <uuid>3abb0108-fda4-4e44-9d17-74bde3f411ec</uuid>
         <creator id="creatorID001">
             <uuid>06a2eb4f-a957-46be-b6b2-076ba2c7592d</uuid>
             <name>AAAA:HPLCsystem</name>
@@ -22,14 +22,14 @@
             <uuid>6e8c295c-f05f-4d2d-9c2b-c75918820141</uuid>
             <name>HPLC</name>
         </instrument>
-        <date>2025-06-03T09:58:56+09:00</date>
+        <date>2025-06-03T10:16:43+09:00</date>
     </document>
     <protocol id="HPLCprotocolID001">
-        <uuid>98f40e03-fc84-45c0-89f1-8976c95ebe20</uuid>
+        <uuid>a57d477b-49a5-48fb-a7db-1852cfc7f7e2</uuid>
         <method id="HPLCmethodID001">
-            <uuid>1f8a254b-925c-4a23-b1f0-3bf2383ec2aa</uuid>
+            <uuid>8beaaeb1-5459-418f-bc24-3d50adf29e81</uuid>
             <pnml id="HPLCpnmlID001">
-                <uuid>1d3bf2dc-a44a-435a-96e7-2c16d3563108</uuid>
+                <uuid>58c37c72-7b60-402e-a70b-a29fc7ea23cb</uuid>
                 <place id="HPLCM_P001" />
                 <place id="HPLCC_P001" />
                 <place id="HPLCR_P001" />
@@ -41,13 +41,13 @@
                 <arc id="HPLCarc004" source="HPLCtransition001" target="HPLCR_P002" />
             </pnml>
             <program id="HPLCprogramID001">
-                <uuid>35a5b955-4d2c-42d6-8b34-500e1e2a5eb0</uuid>
+                <uuid>05d5498a-c292-4b02-9b69-51e6661cc340</uuid>
                 <instruction id="HPLCinstructionID001">
-                    <uuid>cdd466e4-467f-466c-a37c-6affd855a489</uuid>
+                    <uuid>ff782581-5289-477e-ba16-113b6c2f2118</uuid>
                     <transitionRef id="defTRANSITIONREF4" ref="HPLCtransition001" />
                 </instruction>
                 <resultTemplate id="HPLCresultTemplateID001">
-                    <uuid>b68cd861-cd61-48dd-a23e-46466fbbf18f</uuid>
+                    <uuid>1cf03125-d435-4fb1-b24d-53d7302db86f</uuid>
                     <annotation>HPLC出力結果</annotation>
                     <property key="CDF:detector_maximum_value" xsi:type="floatType">
                         <description>Y軸最大値</description>
@@ -70,10 +70,10 @@
                     <content key="CDF:ordinate_values" xsi:type="contentFloatListType" axis="信号強度">
                         <description>Y軸データ</description>
                     </content>
-                    <placeRef id="defPLACEREFHPLCresultTemplateID0010" ref="HPLCR_P001" />
+                    <placeRef id="defPLACEREFHPLCresultTemplateID0013" ref="HPLCR_P001" />
                 </resultTemplate>
                 <resultTemplate id="HPLCresultTemplateID002">
-                    <uuid>7d13704d-0f96-45a2-a6c5-c0a4a9493a61</uuid>
+                    <uuid>98004d8f-0276-4bff-8975-244225e17d28</uuid>
                     <annotation>HPLC出力結果</annotation>
                     <property key="BBBBHPLC:peak_data" xsi:type="propertyListType">
                         <content key="CDF:peak_retention_time" xsi:type="contentFloatListType" units="sec">
@@ -85,11 +85,11 @@
                         <content key="CDF:peak_start_detection_code" xsi:type="contentStringListType" />
                         <content key="CDF:peak_stop_detection_code" xsi:type="contentStringListType" />
                     </property>
-                    <placeRef id="defPLACEREFHPLCresultTemplateID0021" ref="HPLCR_P002" />
+                    <placeRef id="defPLACEREFHPLCresultTemplateID0023" ref="HPLCR_P002" />
                 </resultTemplate>
             </program>
             <materialTemplate id="HPLCmaterialTemplateID001">
-                <uuid>c751586d-3660-42a9-89db-64f9bf9d507b</uuid>
+                <uuid>4230c4fb-5e8c-4148-9e58-9713942bbe70</uuid>
                 <annotation>HPLC対象試料</annotation>
                 <property key="BBBBHPLC:materialinfo" xsi:type="propertyListType">
                     <property key="BBBBHPLC:samplename" xsi:type="qualifiedNameType">
@@ -99,10 +99,10 @@
                         <value>3dc882f8-b1b1-421d-8fb7-b4dce87cb298</value>
                     </property>
                 </property>
-                <placeRef id="defPLACEREFHPLCmaterialTemplateID0010" ref="HPLCM_P001" />
+                <placeRef id="defPLACEREFHPLCmaterialTemplateID0012" ref="HPLCM_P001" />
             </materialTemplate>
             <conditionTemplate id="HPLCconditionTemplateID001">
-                <uuid>efb368a0-543e-40ad-91cd-038a16a94bac</uuid>
+                <uuid>a3465aae-0a4b-4852-8009-3143974075b9</uuid>
                 <annotation>HPLC実行時の入力条件</annotation>
                 <property key="BBBBHPLC:column" xsi:type="propertyListType">
                     <property key="BBBBHPLC:specifications" xsi:type="stringType" />
@@ -127,7 +127,7 @@
                     <property key="BBBBHPLC:systemPressure" xsi:type="intType" units="bar" />
                 </property>
                 <property key="BBBBHPLC:separationMode" xsi:type="stringType" />
-                <placeRef id="defPLACEREFHPLCconditionTemplateID0011" ref="HPLCC_P001" />
+                <placeRef id="defPLACEREFHPLCconditionTemplateID0012" ref="HPLCC_P001" />
             </conditionTemplate>
         </method>
     </protocol>

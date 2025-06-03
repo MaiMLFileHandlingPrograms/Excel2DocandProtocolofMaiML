@@ -162,11 +162,12 @@ def create_arc(arc, row, df, rownum):
 
 ## materialTemplate/conditionTemplate/resultTemplate要素のplaceRef/templateRef要素
 def create_template_ref(template, row, df, rownum):
-    for col in df.columns:
+    #for col in df.columns:
+    for col_index, col in enumerate(df.columns):
         if "PLACEREF" in col and pd.notna(row[col]):
-            place_ref = ET.SubElement(template, "placeRef", id=f"defPLACEREF{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
+            place_ref = ET.SubElement(template, "placeRef", id=f"defPLACEREF{nan_to_empty_string(row['#ID'])}{col_index}", ref=nan_to_empty_string(row[col]))
         if "TEMPLATEREF" in col and pd.notna(row[col]):
-            template_ref = ET.SubElement(template, "templateRef", id=f"defTEMPLATEREF{nan_to_empty_string(row['#ID'])}{rownum}", ref=nan_to_empty_string(row[col]))
+            template_ref = ET.SubElement(template, "templateRef", id=f"defTEMPLATEREF{nan_to_empty_string(row['#ID'])}{col_index}", ref=nan_to_empty_string(row[col]))
 
 ## materialTemplate/conditionTemplate/resultTemplate要素を順番に並べる
 def sort_templates(parent):
