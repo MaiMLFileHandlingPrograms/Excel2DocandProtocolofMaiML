@@ -17,6 +17,7 @@ def clean_numeric(value):
 
 ## valueの数値をフォーマット
 def formatter_num(format_string, number):
+    format_string = str(format_string)
     if '.' in format_string:
         decimal_places = len(format_string.split('.')[1])  # 小数点以下の桁数
     else:
@@ -49,11 +50,10 @@ def create_uuid():
 
 ## document要素のdate要素
 def get_current_datetime():
+    #return datetime.now().astimezone().isoformat()
     # 現在のローカル時刻を取得
     local_time = datetime.now().astimezone()
-    # xs:dateTime形式にフォーマット
-    formatted_time = local_time.strftime('%Y-%m-%dT%H:%M:%S') + f"{local_time.strftime('%z')[:3]}:{local_time.strftime('%z')[3:]}" 
-    return formatted_time
+    return local_time.strftime("%Y-%m-%dT%H:%M:%S%z")[:22] + ':' + local_time.strftime('%z')[3:]
 
 ## ID属性の値がnanの場合、デフォルト値を設定
 def setID(value, tag, prefix=""):
@@ -76,8 +76,13 @@ class BaseElement:
     
     def add_common_subelements(self, element, row):
         try:
-            ET.SubElement(element, "name").text = nan_to_empty_string(row["NAME"])
-            ET.SubElement(element, "description").text = nan_to_empty_string(row["DESCRIPTION"])
+            try:
+                if pd.notna(row["NAME"]):
+                    ET.SubElement(element, "name").text = nan_to_empty_string(row["NAME"])
+            except KeyError:
+                pass
+            if pd.notna(row["DESCRIPTION"]):
+                ET.SubElement(element, "description").text = nan_to_empty_string(row["DESCRIPTION"])
         except KeyError:
             pass
         return element
@@ -101,7 +106,8 @@ class GlobalElement(BaseElement):
         ET.SubElement(element, "uuid").text = uuid_value
         element = super().add_common_subelements(element, row)
         try:
-            ET.SubElement(element, "annotation").text = nan_to_empty_string(row["ANNOTATION"])
+            if pd.notna(row["ANNOTATION"]):
+                ET.SubElement(element, "annotation").text = nan_to_empty_string(row["ANNOTATION"])
         except KeyError:
             pass
         return element
@@ -119,7 +125,8 @@ class GenElement(BaseElement):
                     value = nan_to_empty_string(row["VALUE"])
                     if pd.notna(row["#FORMATSTRING"]):
                         value = formatter_num(row["#FORMATSTRING"], value)
-                    ET.SubElement(element, "value").text = value
+                    if pd.notna(row["VALUE"]):
+                        ET.SubElement(element, "value").text = value
                     flag += 1
         return element
 
@@ -174,6 +181,31 @@ def sort_templates(parent):
     
     for element in elements:
         parent.append(element)  # 順番通りに追加
+
+## 汎用データコンテナを要素順に並べる
+def sort_general(parent):
+    # 子要素をリストとして取得（順番を保持するため）
+    children = list(parent)
+
+    # 'property' と 'content' を分類
+    propertyList = [child for child in children if child.tag == "property"]
+    contentList = [child for child in children if child.tag == "content"]
+    otherList = [child for child in children if child.tag not in ("property", "content")]
+
+    # 一旦すべての子要素を削除
+    for child in children:
+        parent.remove(child)
+
+
+    # 並び順を指定して追加（その他 → property → content）
+    for other in otherList:
+        parent.append(other)
+    for property in propertyList:
+        parent.append(property)
+        sort_general(property)
+    for content in contentList:
+        parent.append(content)
+        sort_general(content)
 
 
 ## DOCUMENTシートを処理
@@ -321,7 +353,7 @@ def process_protocol(xls, sheet_name):
         # 必須でない属性
         attributes = {
             "units": "#UNITS",
-            "formatstring": "#FORMATSTRING",
+            "formatString": "#FORMATSTRING",
             "scaleFactor": "#SCALEFACTOR",
             "axis": "#AXIS",
             "size": "#SIZE"
@@ -387,6 +419,19 @@ def process_protocol(xls, sheet_name):
                         parent2.append(child)  # 親要素に追加
     
         ## コンテンツを要素順に並べる
+        # property, content
+        propertyList = template.findall("property")
+        sort_general(propertyList)
+        contentList = template.findall("content")
+        sort_general(contentList)
+        for property in propertyList:
+            template.remove(property)
+            template.append(property)
+        for content in contentList:
+            template.remove(content)
+            template.append(content)
+            
+        # placeref, templateRef
         placereflist = template.findall(".//placeRef")
         templatereflist = template.findall(".//templateRef")
         # 要素を削除して追加
