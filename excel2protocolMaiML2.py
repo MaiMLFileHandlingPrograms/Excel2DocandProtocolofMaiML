@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, mimetypes, hashlib
 from pathlib import Path
 import pandas as pd
 import xml.etree.ElementTree as ET
@@ -9,33 +9,41 @@ from USERS.usersettings import defaultNS, filePath
 
 ## エクセルの文字列をフォーマット
 def clean_numeric(value):
+    if pd.isna(value):
+        return value 
     if isinstance(value, str):  
         value_num = value.strip("'\"")  # 先頭・末尾の ' や " を削除
         if value_num.replace(".", "", 1).isdigit():  # 数値なら変換
             return value_num
+    elif isinstance(value, float) or isinstance(value, int):
+        return str(value)
     return value 
 
 ## valueの数値をフォーマット
 def formatter_num(format_string, number):
-    format_string = str(format_string)
+    #format_string = str(format_string)
+    #print("formatter_num: ", format_string, number)
     if '.' in format_string:
         decimal_places = len(format_string.split('.')[1])  # 小数点以下の桁数
     else:
         decimal_places = 0
-    
-    # 小数点以下の桁数に基づいて数値をフォーマット
-    if decimal_places == 0:
-        formatted = "{:.0f}".format(int(number))  # 整数としてフォーマット
-    elif decimal_places == 1:
-        formatted = "{:.1f}".format(float(number))  # 小数点以下1桁
-    elif decimal_places == 2:
-        formatted = "{:.2f}".format(float(number))  # 小数点以下2桁
-    elif decimal_places == 3:
-        formatted = "{:.3f}".format(float(number))  # 小数点以下3桁
-    elif decimal_places == 4:
-        formatted = "{:.4f}".format(float(number))  # 小数点以下4桁
-    else:
-        formatted = number  # それ以外の場合
+    try:
+        # 小数点以下の桁数に基づいて数値をフォーマット
+        if decimal_places == 0:
+            formatted = "{:.0f}".format(int(number))  # 整数としてフォーマット
+        elif decimal_places == 1:
+            formatted = "{:.1f}".format(float(number))  # 小数点以下1桁
+        elif decimal_places == 2:
+            formatted = "{:.2f}".format(float(number))  # 小数点以下2桁
+        elif decimal_places == 3:
+            formatted = "{:.3f}".format(float(number))  # 小数点以下3桁
+        elif decimal_places == 4:
+            formatted = "{:.4f}".format(float(number))  # 小数点以下4桁
+        else:
+            formatted = number  # それ以外の場合
+    except (ValueError, TypeError):
+        #print("Error formatting number:", number, "with format string:", format_string)
+        formatted = number
     return formatted
 
 ## nanを空文字に変換
@@ -92,10 +100,52 @@ class SimElement(BaseElement):
     def add_element(self, parent, tag, row, prefix=""):
         element = super().add_element(parent, tag, row, prefix)
         return element
+    
+### insertion要素のコンテンツを作成 ###
+def make_insertion(value, global_element, others_path=None):
+    if pd.isna(value) or value == "":
+        return global_element
+    filename = str(value)
+    if others_path is not None:
+        file_path = others_path / filename
+    else:
+        file_path =  filePath().INPUT_OTHER_PATH + filename
+
+    # formatの取得
+    extension = os.path.splitext(filename)[1]
+    mime_type=''
+    hash_sha256 = ''
+    mimetypes.init()
+    try:
+        mime_type = mimetypes.types_map[extension]
+    except Exception as e:
+        print("[INFO]insertion file's mime_type is not exist.: ", filename)
+        mime_type = 'none'
+    try:
+        with open(file_path, 'rb') as f:
+            hash_sha256 = hashlib.sha256()
+            while chunk := f.read(8192):  # 8KBごとにファイルを読み込む
+                hash_sha256.update(chunk) 
+            hash_sha256 = hash_sha256.hexdigest()
+        print("insertion file is loaded.: ", file_path)
+    except FileNotFoundError as e:
+        print("Skip hash value generation because the input file does not exist in the directory. ", filename)
+    except Exception as e:
+        print(e)
+        exit(1)
+    ## insertion要素を追加
+    insertion_element = ET.SubElement(global_element, "insertion")
+    insertion_uri_element = ET.SubElement(insertion_element, "uri")
+    insertion_uri_element.text = './'+ filename   # MaiMLと同じフォルダを設定
+    insertion_hash_element = ET.SubElement(insertion_element, "hash")
+    insertion_hash_element.text = str(hash_sha256)
+    insertion_format_element = ET.SubElement(insertion_element, "format")
+    insertion_format_element.text = mime_type
+    return global_element
 
 ## グローバル要素
 class GlobalElement(BaseElement):
-    def add_element(self, parent, tag, row, prefix=""):
+    def add_element(self, parent, tag, row, prefix="", others_path=None):
         # GlobalElement専用の追加処理
         element = super().add_element(parent, tag, row, prefix)
         uuid_value = create_uuid()
@@ -104,12 +154,20 @@ class GlobalElement(BaseElement):
         except KeyError:
             pass
         ET.SubElement(element, "uuid").text = uuid_value
+        # Insertion要素の処理
+        for key in row.keys():
+            try:
+                if key.startswith("INSERTION") and pd.notna(row[key]):
+                    element = make_insertion(row[key], element, others_path)
+            except KeyError:
+                pass
         element = super().add_common_subelements(element, row)
         try:
             if pd.notna(row["ANNOTATION"]):
                 ET.SubElement(element, "annotation").text = nan_to_empty_string(row["ANNOTATION"])
         except KeyError:
             pass
+
         return element
     
 ## 汎用データコンテナ
@@ -123,6 +181,7 @@ class GenElement(BaseElement):
                     pass
                 else:
                     value = nan_to_empty_string(row["VALUE"])
+                    #print(row["#FORMATSTRING"])
                     if pd.notna(row["#FORMATSTRING"]):
                         value = formatter_num(row["#FORMATSTRING"], value)
                     if pd.notna(row["VALUE"]):
@@ -210,7 +269,7 @@ def sort_general(parent):
 
 
 ## DOCUMENTシートを処理
-def process_document(xls, sheet_name):
+def process_document(xls, sheet_name, others_path=None):
     df = xls.parse(sheet_name)
     #df = df.map(clean_string)
     df = df.map(clean_numeric)
@@ -240,7 +299,7 @@ def process_document(xls, sheet_name):
 
 
 ## PROTOCOLシートを処理
-def process_protocol(xls, sheet_name):
+def process_protocol(xls, sheet_name, others_path=None):
     #print("PROTOCOL")
     df = xls.parse(sheet_name)
     df = df.map(clean_numeric)
@@ -319,18 +378,19 @@ def process_protocol(xls, sheet_name):
         
         for num_element, row_element in df_element.iterrows():
             if row_element["TYPE"] == "MATERIALTEMPLATE":
-                materialTemplate = gen_element.add_element(element, "materialTemplate", row_element, num_element)
+                materialTemplate = gen_element.add_element(element, "materialTemplate", row_element, num_element, others_path=others_path)
                 create_template_ref(materialTemplate, row_element, df_element, num_element)
             elif row_element["TYPE"] == "CONDITIONTEMPLATE":
-                conditionTemplate = gen_element.add_element(element, "conditionTemplate", row_element, num_element)
+                conditionTemplate = gen_element.add_element(element, "conditionTemplate", row_element, num_element, others_path=others_path)
                 create_template_ref(conditionTemplate, row_element, df_element, num_element)
             elif row_element["TYPE"] == "RESULTTEMPLATE":
-                resultTemplate = gen_element.add_element(element, "resultTemplate", row_element, num_element)
-                create_template_ref(resultTemplate, row_element, df_element, num_element)  
+                resultTemplate = gen_element.add_element(element, "resultTemplate", row_element, num_element, others_path=others_path)
+                create_template_ref(resultTemplate, row_element, df_element, num_element)
     
     # TEMPLATEシートの処理
     #print("TEMPLATE")
-    df_template = xls.parse("TEMPLATE")
+    #df_template = xls.parse("TEMPLATE")
+    df_template = xls.parse("TEMPLATE", converters={"#FORMATSTRING": str, "#SCALEFACTOR": str, "#SIZE": str})
     #df_template = df_template.map(clean_string)
     df_template = df_template.map(clean_numeric)
     parentgenerallist = {}
@@ -361,6 +421,7 @@ def process_protocol(xls, sheet_name):
         }
         for attr, col_name in attributes.items():
             if col_name in df_template.columns and not pd.isna(row_TEMPLATE[col_name]):
+                #print(str(row_TEMPLATE[col_name]))
                 general.set(attr, str(row_TEMPLATE[col_name]))  ## 特殊文字を削除
                 
         # 子要素を追加
@@ -452,7 +513,7 @@ def process_protocol(xls, sheet_name):
     return protocol
 
 
-def main(exfilepath, maimlpath):
+def main(exfilepath, maimlpath, rootdir=None):
     # Excelファイルの読み込み
     xls = ''
     try:
@@ -464,10 +525,10 @@ def main(exfilepath, maimlpath):
         exit(1)
         
     # DOCUMENTシートを処理
-    document_xml = process_document(xls, "DOCUMENT")
+    document_xml = process_document(xls, "DOCUMENT", others_path=rootdir)
 
     # PROTOCOLシートを処理
-    protocol_xml = process_protocol(xls, "PROTOCOL")
+    protocol_xml = process_protocol(xls, "PROTOCOL", others_path=rootdir)
 
     # MAIML XMLを生成
     maiml_xml = ET.Element("maiml")
@@ -485,6 +546,14 @@ def main(exfilepath, maimlpath):
     except Exception as e:
         print('Error while writing to the file.',e) 
 
+# ファイル読み込み時除外条件
+def is_valid_file(filename):
+    return not (
+        filename.startswith('.') or  # 隠しファイル
+        filename.startswith('~') or  # 一時ファイル（エディタによる）
+        filename.startswith('._') or # macOSのメタファイル
+        filename.startswith('.~lock')  # LibreOffice編集中ファイルなど
+    )
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -492,7 +561,7 @@ if __name__ == '__main__':
         rootdir = Path( filePath().INPUT_DIR + sys.argv[1])
         if rootdir.exists() and rootdir.is_dir():
             for file in rootdir.rglob('*'):  # rglob('*') で再帰的にすべてのファイルを取得
-                if file.is_file():  # ファイルかどうかを確認
+                if file.is_file() and is_valid_file(file.name):  # ファイルかどうかを確認
                     # ファイル名と拡張子を分けて取得
                     file_extension = file.suffix  # 拡張子を取得
                     if file_extension == '.xlsx':
@@ -500,7 +569,7 @@ if __name__ == '__main__':
                         inputExfilepath = rootdir / exfilename
                         outputMaimlpath = rootdir / f"{os.path.splitext(os.path.basename(exfilename))[0]}.maiml"
                         try:
-                            main(str(inputExfilepath), str(outputMaimlpath))
+                            main(str(inputExfilepath), str(outputMaimlpath), rootdir=rootdir)
                             print("Successfully created the MaiML data file. ", outputMaimlpath)
                         except Exception as e:
                             print('Error : ',e)
